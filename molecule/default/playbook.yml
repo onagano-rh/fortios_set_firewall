@@ -1,0 +1,34 @@
+---
+- name: Call fortios_set_firewall role
+  hosts: all
+  connection: local
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: fortios_set_firewall
+      vars:
+        # Addresses to create by fortios_firewall_address
+        fsf_addresses:
+          - name: 1.2.3.4
+            comment: "{{ fsf_comments }}"
+            associated_interface: port1
+          - name: 1.2.3.5
+            comment: "{{ fsf_comments }}"
+            associated_interface: port1
+        # Policy to create by fortios_firewall_policy
+        fsf_https: false
+        fsf_ssl_verify: false
+        fsf_policyid: 3
+        fsf_srcintf:
+            - name: port1
+        fsf_dstintf:
+            - name: port1
+        fsf_srcaddr:
+            - name: all
+        fsf_dstaddr:
+            - name: all
+        fsf_action: accept
+        fsf_service:
+            - name: HTTP
+            - name: HTTPS
+        fsf_comments: Expiration date 202012

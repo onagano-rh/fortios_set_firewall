@@ -1,0 +1,92 @@
+---
+- name: Check if {{ platform.name }} is already defined or not, ignoring errors
+  command: virsh domstate {{ platform.name }}
+  register: virsh_domstate
+  ignore_errors: true
+  changed_when: false
+
+- name: Executes when {{ platform.name }} is not defined
+  block:
+
+    - name: Check if the image_file exists or not
+      assert:
+        that:
+          - platform.image_file | d()
+          - platform.image_file is file
+          - platform.admin_password | d()
+          - platform.admin_password is string
+        fail_msg: |
+          Define variables in your molecule.yml.
+            platform.image_file: {{ platform.image_file }}
+            platform.admin_password: {{ platform.admin_password }}
+
+    - name: Determine the image file name
+      set_fact:
+        installing_image_file: >-
+          /var/lib/libvirt/images/{{ platform.name }}{{ platform.image_file | splitext | last }}
+
+    - name: Copy the image file
+      # SELinux label is also appropriately changed
+      copy:
+        src: "{{ platform.image_file }}"
+        dest: "{{ installing_image_file }}"
+
+    - name: Install a new instance
+      command: >-
+        virt-install --name {{ platform.name }} --vcpus 1 --memory 1024
+        --import --disk {{ installing_image_file }}
+        --network bridge=virbr0
+        --noautoconsole
+        --noreboot
+
+    - name: Start the instance explicitly
+      command: virsh start {{ platform.name }}
+
+    - name: Determine instance MAC address
+      # Using hostname is not enough
+      shell: >-
+        virsh dumpxml {{ platform.name }} |
+        grep '<mac address=' |
+        sed 's/.*\(..:..:..:..:..:..\).*/\1/'
+      register: res_xml
+
+    - set_fact:
+        instance_mac_address: "{{ res_xml.stdout }}"
+
+    - debug:
+        var: instance_mac_address
+
+    - name: Wait for it becoming accessible
+      shell: virsh net-dhcp-leases default | grep -w '{{ instance_mac_address }}'
+      register: grep_result
+      until: grep_result.rc == 0
+      delay: 10
+      retries: 30
+
+    - name: Extract the IP address
+      shell: >-
+        virsh net-dhcp-leases default |
+        grep -w '{{ instance_mac_address }}' |
+        awk '{print $5}' |
+        sed 's=/..*=='
+      register: res
+
+    - set_fact:
+        instance_ip_address: "{{ res.stdout }}"
+
+    - name: Edit /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^{{ instance_ip_address }}'
+        line: '{{ instance_ip_address }} {{ platform.name }} {{ platform.name }}.example.com'
+        state: present
+
+    - name: Change admin password
+      expect:
+        command: ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null admin@{{ platform.name }}
+        responses:
+          'New Password': "{{ platform.admin_password }}"
+          'Confirm Password': "{{ platform.admin_password }}"
+          ' #$': exit
+
+  when: virsh_domstate is failed

@@ -1,0 +1,42 @@
+---
+- name: Check if {{ platform.name }} is already defined or not, ignoring errors
+  command: virsh domstate {{ platform.name }}
+  register: virsh_domstate
+  ignore_errors: true
+  changed_when: false
+
+- name: Executes when {{ platform.name }} is still defined
+  block:
+
+    - name: Stop the instance ignoring errors
+      command: virsh shutdown {{ platform.name }}
+      ignore_errors: true
+
+    - name: Wait shutting down ignoring errors
+      shell: virsh list | grep -w '{{ platform.name }}'
+      register: grep_result
+      until: grep_result.rc != 0
+      delay: 10
+      retries: 30
+      ignore_errors: true
+
+    - name: Undefined the instance
+      command: virsh undefine {{ platform.name }}
+
+    - name: Determine the image file name
+      set_fact:
+        installing_image_file: >-
+          /var/lib/libvirt/images/{{ platform.name }}{{ platform.image_file | splitext | last }}
+
+    - name: Delete the image file
+      file:
+        path: "{{ installing_image_file }}"
+        state: absent
+
+    - name: Edit /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        regexp: ' {{ platform.name }} '
+        state: absent
+
+  when: virsh_domstate is succeeded

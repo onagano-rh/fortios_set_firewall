@@ -1,0 +1,38 @@
+---
+- name: Test variables are OK
+  assert:
+    that:
+      - fsf_addresses | d()
+      - fsf_addresses is sequence
+      - fsf_addresses [0].name | d()
+      - fsf_policyid | d()
+      - fsf_policyid is number
+      - fsf_srcintf | d()
+      - fsf_srcintf is sequence
+      - fsf_srcintf[0].name | d()
+      - fsf_dstintf | d()
+      - fsf_dstintf is sequence
+      - fsf_dstintf[0].name | d()
+      - fsf_srcaddr | d()
+      - fsf_srcaddr is sequence
+      - fsf_srcaddr[0].name | d()
+      - fsf_dstaddr | d()
+      - fsf_dstaddr is sequence
+      - fsf_dstaddr[0].name | d()
+      - fsf_action | d()
+      - fsf_action is string
+      - fsf_service | d()
+      - fsf_service is sequence
+      - fsf_service[0].name | d()
+      - fsf_comments | d()
+      - fsf_comments is string
+    fail_msg: |
+      fsf_addresses: {{ fsf_addresses | d() }}
+      fsf_policyid: {{ fsf_policyid | d() }}
+      fsf_srcintf: {{ fsf_srcintf | d() }}
+      fsf_dstintf: {{ fsf_dstintf | d() }}
+      fsf_srcaddr: {{ fsf_srcaddr | d() }}
+      fsf_dstaddr: {{ fsf_dstaddr | d() }}
+      fsf_action: {{ fsf_action | d() }}
+      fsf_service: {{ fsf_service | d() }}
+      fsf_comments: {{ fsf_comments | d() }}

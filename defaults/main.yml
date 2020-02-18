@@ -1,0 +1,8 @@
+---
+fsf_vdom:  root
+fsf_https: true
+fsf_ssl_verify: true
+fsf_state: present
+
+fsf_schedule: always
+fsf_logtraffic: all

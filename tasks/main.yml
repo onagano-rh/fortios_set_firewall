@@ -1,0 +1,48 @@
+---
+- name: Check necessary variables
+  include_tasks: pre.yml
+
+- name: Ensure addresses exit
+  fortios_firewall_address:
+    host: "{{ ansible_host }}"
+    username: "{{ ansible_user }}"
+    password: "{{ ansible_password }}"
+    vdom: "{{ fsf_vdom }}"
+    https: "{{ fsf_https }}"
+    ssl_verify: "{{ fsf_ssl_verify }}"
+    state: "{{ fsf_state }}"
+    firewall_address:
+      name: "{{ item.name }}"
+      comment: "{{ item.comment }}"
+      associated_interface: "{{ item.associated_interface }}"
+      subnet: "{{ item.name }} 255.255.255.255"
+      type: ipmask
+  loop:
+    # TODO: create a list from fsf_srcaddr and fsf_dstaddr
+    "{{ fsf_addresses }}"
+
+- name: Configure firewall policy
+  fortios_firewall_policy:
+    host: "{{ ansible_host }}"
+    username: "{{ ansible_user }}"
+    password: "{{ ansible_password }}"
+    vdom: "{{ fsf_vdom }}"
+    https: "{{ fsf_https }}"
+    ssl_verify: "{{ fsf_ssl_verify }}"
+    state: "{{ fsf_state }}"
+    firewall_policy:
+      policyid: "{{ fsf_policyid }}"
+      srcintf:
+        "{{ fsf_srcintf }}"
+      dstintf:
+        "{{ fsf_dstintf }}"
+      srcaddr:
+        "{{ fsf_srcaddr }}"
+      dstaddr:
+        "{{ fsf_dstaddr }}"
+      action: "{{ fsf_action }}"
+      schedule: "{{ fsf_schedule }}"
+      service:
+        "{{ fsf_service }}"
+      logtraffic: "{{ fsf_logtraffic }}"
+      comments: "{{ fsf_comments }}"
