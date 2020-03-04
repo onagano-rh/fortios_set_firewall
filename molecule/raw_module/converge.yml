@@ -1,0 +1,12 @@
+---
+- name: Test raw module via ssh
+  hosts: all
+  gather_facts: false
+  tasks:
+
+    - name: Get system status
+      raw: get system status
+      register: res
+
+    - debug:
+        var: res.stdout_lines
