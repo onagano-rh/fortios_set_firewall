@@ -3,16 +3,15 @@ dependency:
   name: galaxy
 driver:
   name: delegated
-lint:
-  name: yamllint
+lint: |
+  yamllint .
+  ansible-lint
 platforms:
   - name: fortios
     image_file: /home/onagano/tmp/fortios.qcow2
     admin_password: RedHat1!
 provisioner:
   name: ansible
-  lint:
-    name: ansible-lint
   config_options:
     defaults:
       stdout_callback: debug
@@ -24,5 +23,3 @@ provisioner:
         ansible_python_interpreter: ${MOLECULE_PROJECT_DIRECTORY}/.tox/py37/bin/python
 verifier:
   name: ansible
-  lint:
-    name: ansible-lint

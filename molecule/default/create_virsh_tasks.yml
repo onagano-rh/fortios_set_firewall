@@ -50,7 +50,8 @@
         sed 's/.*\(..:..:..:..:..:..\).*/\1/'
       register: res_xml
 
-    - set_fact:
+    - name: Keep the mac address into a variable
+      set_fact:
         instance_mac_address: "{{ res_xml.stdout }}"
 
     - debug:
@@ -71,7 +72,8 @@
         sed 's=/..*=='
       register: res
 
-    - set_fact:
+    - name: Keep the IP address into a variable
+      set_fact:
         instance_ip_address: "{{ res.stdout }}"
 
     - name: Edit /etc/hosts
