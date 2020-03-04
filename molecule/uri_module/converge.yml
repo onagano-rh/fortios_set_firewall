@@ -1,0 +1,46 @@
+---
+# https://tenko.hatenablog.jp/entry/2019/11/28/224615
+
+- name: Test REST API by direct access by uri module
+  hosts: all
+  connection: local
+  gather_facts: false
+  vars:
+    api_type: "monitor"
+    api_path: "system"
+    api_name: "config"
+  tasks:
+
+    - name: Login
+      uri:
+        # Changed from https to http
+        #   <urlopen error [SSL: WRONG_VERSION_NUMBER] wrong version number (_ssl.c:1076)>
+        url: http://{{ ansible_host }}/logincheck
+        validate_certs: no
+        method: "POST"
+        force_basic_auth: yes
+        body_format: "form-urlencoded"
+        url_username: "{{ ansible_user }}"
+        url_password: "{{ ansible_password }}"
+        body:
+          - [ username, "{{ ansible_user }}" ]
+          - [ secretkey, "{{ ansible_password }}" ]
+          - [ ajax, "1" ]
+      register: http_response
+      
+    - name: GET Config Backup
+      uri:
+        # Changed from https to http
+        url: http://{{ ansible_host }}/api/v2/{{ api_type }}/{{ api_path }}/{{ api_name }}/backup?scope=global
+        validate_certs: no
+        method: "GET"
+        headers:
+          Cookie: "{{ http_response.set_cookie }}"
+        return_content: yes
+      register: get_obj
+
+    # selinux Python package is required on my Fedora 30
+    - name: Backup File
+      copy:
+        content: "{{ get_obj.content }}"
+        dest: ./backup.txt # バックアップ出力先指定
