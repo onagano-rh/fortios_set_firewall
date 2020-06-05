@@ -27,7 +27,7 @@
           - [ secretkey, "{{ ansible_password }}" ]
           - [ ajax, "1" ]
       register: http_response
-      
+
     - name: GET Config Backup
       uri:
         # Changed from https to http
