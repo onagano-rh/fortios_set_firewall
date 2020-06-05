@@ -20,7 +20,7 @@ provisioner:
       all:
         ansible_user: admin
         ansible_password: RedHat1!
-        ansible_python_interpreter: ${MOLECULE_PROJECT_DIRECTORY}/.tox/py37/bin/python
+        ansible_python_interpreter: ${MOLECULE_PROJECT_DIRECTORY}/.tox/py38/bin/python
   playbooks:
     create: ../default/create.yml
     destroy: ../default/destroy.yml
